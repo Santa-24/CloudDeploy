@@ -7,13 +7,12 @@ FROM maven:3.9.8-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /app
 
-# Cache dependencies
+# Copy build specifications and source code
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Build application JAR
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+
+# Build executable JAR and purge maven cache to conserve disk space
+RUN mvn clean package -DskipTests -B && rm -rf /root/.m2
 
 # Stage 2: Minimal Production JRE 21 Runtime
 FROM eclipse-temurin:21-jre-alpine AS runner
