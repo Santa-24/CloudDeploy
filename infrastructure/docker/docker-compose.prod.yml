@@ -1,0 +1,120 @@
+# ==============================================================================
+# CloudDeploy — Production Multi-Container Docker Compose Stack
+# Services: Nginx Reverse Proxy (80/443), Spring Boot Backend (8080), React Frontend
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Spring Boot Backend Service (Java 21)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: clouddeploy-backend
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SERVER_PORT=8080
+      # Amazon RDS MySQL Connection
+      - RDS_HOSTNAME=${RDS_HOSTNAME}
+      - RDS_PORT=${RDS_PORT:-3306}
+      - RDS_DB_NAME=${RDS_DB_NAME:-clouddeploy}
+      - RDS_USERNAME=${RDS_USERNAME:-clouddeploy_admin}
+      - RDS_PASSWORD=${RDS_PASSWORD}
+      # AWS Storage & Edge CDN
+      - AWS_REGION=${AWS_REGION:-ap-south-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - APP_STORAGE_MODE=${APP_STORAGE_MODE:-s3}
+      - AWS_S3_UPLOAD_BUCKET=${AWS_S3_UPLOAD_BUCKET}
+      - AWS_S3_SITE_BUCKET=${AWS_S3_SITE_BUCKET}
+      - AWS_CLOUDFRONT_DISTRIBUTION_ID=${AWS_CLOUDFRONT_DISTRIBUTION_ID}
+      - AWS_CLOUDFRONT_DOMAIN=${AWS_CLOUDFRONT_DOMAIN}
+      # Amazon Cognito Authentication
+      - AWS_COGNITO_USER_POOL_ID=${AWS_COGNITO_USER_POOL_ID}
+      - AWS_COGNITO_CLIENT_ID=${AWS_COGNITO_CLIENT_ID}
+      - AWS_COGNITO_REGION=${AWS_COGNITO_REGION:-ap-south-1}
+      # Security & Quotas
+      - JWT_SECRET=${JWT_SECRET:-clouddeploy-production-super-secure-jwt-signing-key-32chars}
+      - APP_BASE_DOMAIN=${APP_BASE_DOMAIN:-sites.clouddeploy.internal}
+      - APP_UPLOAD_MAX_BYTES=${APP_UPLOAD_MAX_BYTES:-52428800}
+      - APP_MAX_FILES_PER_DEPLOYMENT=${APP_MAX_FILES_PER_DEPLOYMENT:-1000}
+      - APP_MAX_EXTRACTED_BYTES=${APP_MAX_EXTRACTED_BYTES:-262144000}
+      - APP_MAX_PROJECTS_PER_USER=${APP_MAX_PROJECTS_PER_USER:-3}
+      - APP_DEMO_AUTH_ENABLED=false
+    volumes:
+      - backend_storage:/app/storage
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 384M
+    networks:
+      - clouddeploy-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ----------------------------------------------------------------------------
+  # 2. React + Vite Production Frontend
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=/api
+        - VITE_DEMO_MODE=false
+        - VITE_COGNITO_USER_POOL_ID=${AWS_COGNITO_USER_POOL_ID}
+        - VITE_COGNITO_CLIENT_ID=${AWS_COGNITO_CLIENT_ID}
+        - VITE_COGNITO_REGION=${AWS_COGNITO_REGION:-ap-south-1}
+    container_name: clouddeploy-frontend
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    networks:
+      - clouddeploy-net
+
+  # ----------------------------------------------------------------------------
+  # 3. Nginx Edge Reverse Proxy (TLS 1.3 / SSL / Ingress)
+  # ----------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: clouddeploy-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - clouddeploy-net
+
+# ------------------------------------------------------------------------------
+# Persistent Volumes & Network Definitions
+# ------------------------------------------------------------------------------
+volumes:
+  backend_storage:
+    driver: local
+  certbot_www:
+    driver: local
+  certbot_conf:
+    driver: local
+
+networks:
+  clouddeploy-net:
+    driver: bridge
