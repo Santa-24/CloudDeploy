@@ -140,7 +140,7 @@ Configure Instance Settings:
 
 ================================================================================
 4. STEP 2: CONFIGURE RDS MYSQL SECURITY GROUP FOR EC2
-================================================================================
+========================================================+========================
 
 Allow the EC2 instance to access the Amazon RDS MySQL database:
 1. Open the EC2 / VPC Console -> "Security groups".

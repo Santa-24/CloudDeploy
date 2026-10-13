@@ -2,8 +2,6 @@
 # CloudDeploy — Root Docker Compose Configuration
 # ==============================================================================
 
-version: '3.8'
-
 services:
   backend:
     build:

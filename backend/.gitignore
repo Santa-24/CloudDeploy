@@ -1,9 +1,10 @@
 target/
-storage/
-uploads/
+/storage/
+/uploads/
 *.log
 *.mv.db
 *.trace.db
 .env
 .env.*
 !.env.example
+!src/**

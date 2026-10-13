@@ -18,10 +18,10 @@ secrets/
 *.db
 *.mv.db
 *.trace.db
-storage/
-**/storage/
-uploads/
-**/uploads/
+/storage/
+/backend/storage/
+/backend/uploads/
+!**/src/**
 
 # Java / Spring Boot / Maven
 target/
