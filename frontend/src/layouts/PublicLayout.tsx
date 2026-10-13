@@ -43,8 +43,8 @@ export const PublicLayout: React.FC = () => {
           <div className="flex items-center gap-8">
             {/* Brand Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-7 h-7 bg-vermilion border border-ink flex items-center justify-center text-paper font-bold shadow-[2px_2px_0px_0px_#1D1C19] group-hover:translate-x-[-1px] group-hover:translate-y-[-1px] transition-transform">
-                <span className="text-xs font-mono">CD</span>
+              <div className="w-8 h-8 bg-paper border border-ink flex items-center justify-center p-0.5 shadow-[2px_2px_0px_0px_#1D1C19] group-hover:translate-x-[-1px] group-hover:translate-y-[-1px] transition-transform">
+                <img src="/logo.png" alt="CloudDeploy" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-editorial text-xl font-bold tracking-tight text-ink leading-none">
@@ -189,8 +189,8 @@ export const PublicLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-vermilion border border-ink flex items-center justify-center text-white text-xs font-mono">
-                CD
+              <div className="w-6 h-6 bg-paper border border-ink flex items-center justify-center p-0.5">
+                <img src="/logo.png" alt="CloudDeploy" className="w-full h-full object-contain" />
               </div>
               <span className="font-editorial text-lg font-bold">CloudDeploy</span>
             </div>

@@ -38,16 +38,43 @@ export const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-paper">
       <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="inline-block w-10 h-10 bg-vermilion border border-ink shadow-editorial mb-3 text-paper font-bold flex items-center justify-center font-mono text-base">
-            CD
+        {/* Card Header with Brand Logo */}
+        <div className="text-center mb-8 space-y-3">
+          <Link to="/" className="inline-block group focus:outline-none" title="Return to CloudDeploy Home">
+            <div className="relative mx-auto w-20 h-20 bg-paper-light border-2 border-ink shadow-[4px_4px_0px_0px_#C65336] p-1.5 transition-transform group-hover:-translate-y-0.5 group-hover:-translate-x-0.5">
+              <img
+                src="/logo.png"
+                alt="CloudDeploy Logo"
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute -bottom-2 -right-2 px-1.5 py-0.5 bg-ink text-lime border border-ink flex items-center justify-center font-mono text-[9px] font-bold shadow-[1px_1px_0px_0px_#1D1C19]">
+                AWS
+              </div>
+            </div>
+          </Link>
+
+          <div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="font-editorial text-2xl font-bold tracking-tight text-ink">
+                CloudDeploy
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 bg-ink text-lime border border-ink font-bold">
+                SIGN UP
+              </span>
+            </div>
+            <p className="text-[11px] font-mono text-ink-faint uppercase tracking-wider mt-0.5">
+              AWS Static Website Platform
+            </p>
           </div>
-          <h2 className="font-editorial text-3xl font-bold tracking-tight text-ink">
-            Create User Workspace
-          </h2>
-          <p className="mt-2 text-xs font-mono text-ink-muted">
-            Multi-Tenant Isolation • 100MB S3 Storage Tier Allocated
-          </p>
+
+          <div className="pt-1">
+            <h2 className="font-editorial text-3xl font-bold tracking-tight text-ink">
+              Create User Workspace
+            </h2>
+            <p className="mt-1 text-xs font-mono text-ink-muted">
+              Multi-Tenant Isolation • Free Plan (Up to 3 Sites)
+            </p>
+          </div>
         </div>
 
         <div className="card-editorial p-8 bg-paper-light">

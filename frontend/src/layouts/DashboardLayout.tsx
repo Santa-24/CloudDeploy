@@ -60,8 +60,8 @@ export const DashboardLayout: React.FC = () => {
         {/* Brand Header */}
         <div className="p-6 border-b border-ink">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-vermilion border border-ink flex items-center justify-center text-paper font-bold shadow-[2px_2px_0px_0px_#1D1C19]">
-              <span className="text-xs font-mono">CD</span>
+            <div className="w-8 h-8 bg-paper border border-ink flex items-center justify-center p-0.5 shadow-[2px_2px_0px_0px_#1D1C19]">
+              <img src="/logo.png" alt="CloudDeploy" className="w-full h-full object-contain" />
             </div>
             <div>
               <span className="font-editorial text-lg font-bold tracking-tight text-ink block leading-none">
