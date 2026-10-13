@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'vermilion' | 'lime' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'vermilion' | 'lime' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -32,6 +32,7 @@ export const Button: React.FC<ButtonProps> = ({
     vermilion: 'bg-vermilion text-white border border-ink shadow-editorial hover:bg-vermilion-hover hover:translate-x-[-1px] hover:translate-y-[-1px]',
     lime: 'bg-lime text-ink border border-ink font-semibold shadow-editorial hover:bg-lime-hover hover:translate-x-[-1px] hover:translate-y-[-1px]',
     secondary: 'bg-paper-light text-ink border border-ink shadow-editorial hover:bg-paper-dark hover:translate-x-[-1px] hover:translate-y-[-1px]',
+    outline: 'bg-paper-light text-ink border border-ink shadow-editorial hover:bg-paper-dark hover:translate-x-[-1px] hover:translate-y-[-1px]',
     ghost: 'bg-transparent text-ink hover:bg-stone-faint border border-transparent hover:border-stone-subtle',
     danger: 'bg-red-700 text-white border border-ink shadow-editorial hover:bg-red-800 hover:translate-x-[-1px] hover:translate-y-[-1px]',
   };

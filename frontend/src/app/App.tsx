@@ -9,6 +9,8 @@ import { DashboardLayout } from '../layouts/DashboardLayout';
 
 // Public Pages
 import { LandingPage } from '../pages/LandingPage';
+import { FeaturesPage } from '../pages/FeaturesPage';
+import { TemplatesPage } from '../pages/TemplatesPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
@@ -66,6 +68,8 @@ export const App: React.FC = () => {
             {/* Public Showcase & Auth */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/templates" element={<TemplatesPage />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />

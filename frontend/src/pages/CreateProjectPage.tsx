@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -19,9 +19,13 @@ import {
 
 export const CreateProjectPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [description, setDescription] = useState('');
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get('template');
+  const templateName = searchParams.get('name');
+
+  const [name, setName] = useState(templateName || '');
+  const [slug, setSlug] = useState(searchParams.get('slug') || '');
+  const [description, setDescription] = useState(searchParams.get('desc') || '');
   const [isLoading, setIsLoading] = useState(false);
   const [activeSiteCount, setActiveSiteCount] = useState<number>(0);
   const [isCheckingQuota, setIsCheckingQuota] = useState(true);
@@ -104,6 +108,31 @@ export const CreateProjectPage: React.FC = () => {
         title="Create Website Project"
         subtitle="Configure the metadata and routing slug for your new AWS static site origin."
       />
+
+      {/* Starter Template Callout */}
+      {templateId && (
+        <div className="p-4 bg-paper-light border-2 border-ink shadow-[4px_4px_0px_0px_#D7EE73] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-ink text-lime border border-ink">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-vermilion font-bold">
+                STARTER TEMPLATE SELECTED
+              </div>
+              <div className="font-editorial text-base font-bold text-ink">
+                {templateName || templateId}
+              </div>
+              <div className="text-xs text-ink-muted">
+                Pre-configured build settings ready for instant deployment.
+              </div>
+            </div>
+          </div>
+          <Link to="/templates" className="text-xs font-mono text-ink-muted hover:text-ink underline">
+            Change
+          </Link>
+        </div>
+      )}
 
       {/* Quota Indicator Banner */}
       {!isCheckingQuota && (

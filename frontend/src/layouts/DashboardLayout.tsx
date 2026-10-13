@@ -36,6 +36,7 @@ export const DashboardLayout: React.FC = () => {
     { label: 'Overview', path: '/dashboard', icon: Layers },
     { label: 'Projects', path: '/projects', icon: FolderKanban },
     { label: 'New Project', path: '/projects/new', icon: Plus },
+    { label: 'Starter Templates', path: '/templates', icon: Sparkles },
     { label: 'Pricing & Plans', path: '/pricing', icon: Zap },
     { label: 'Usage & Quotas', path: '/usage', icon: HardDrive },
     { label: 'Documentation', path: '/docs', icon: FileCode2 },
