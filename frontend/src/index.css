@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-paper: #F5F0E7;
+    --color-paper-light: #FAF7F2;
+    --color-paper-dark: #E8E1D5;
+    --color-ink: #1D1C19;
+    --color-ink-pure: #0F0E0D;
+    --color-vermilion: #C65336;
+    --color-lime: #D7EE73;
+    --color-stone: #A7A095;
+    --color-stone-light: #D3CEC5;
+  }
+
+  body {
+    background-color: #F5F0E7;
+    color: #1D1C19;
+    min-height: 100vh;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #E8E1D5;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #A7A095;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1D1C19;
+  }
+}
+
+@layer components {
+  /* Editorial borders & rules */
+  .border-ink-strong {
+    border-color: #1D1C19;
+  }
+  .border-stone-subtle {
+    border-color: #D3CEC5;
+  }
+
+  /* Editorial Card */
+  .card-editorial {
+    background-color: #FAF7F2;
+    border: 1px solid #1D1C19;
+    box-shadow: 3px 3px 0px 0px #1D1C19;
+    transition: all 0.15s ease-in-out;
+  }
+  .card-editorial:hover {
+    box-shadow: 5px 5px 0px 0px #1D1C19;
+    transform: translate(-1px, -1px);
+  }
+
+  .card-editorial-flat {
+    background-color: #FAF7F2;
+    border: 1px solid #D3CEC5;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    background-color: #1D1C19;
+    color: #F5F0E7;
+    border: 1px solid #1D1C19;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    box-shadow: 2px 2px 0px 0px #C65336;
+    transition: all 0.15s ease;
+  }
+  .btn-primary:hover {
+    background-color: #C65336;
+    border-color: #C65336;
+    color: #FFFFFF;
+    box-shadow: 3px 3px 0px 0px #1D1C19;
+    transform: translate(-1px, -1px);
+  }
+
+  .btn-vermilion {
+    background-color: #C65336;
+    color: #FFFFFF;
+    border: 1px solid #1D1C19;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    box-shadow: 2px 2px 0px 0px #1D1C19;
+    transition: all 0.15s ease;
+  }
+  .btn-vermilion:hover {
+    background-color: #B0472D;
+    box-shadow: 3px 3px 0px 0px #1D1C19;
+    transform: translate(-1px, -1px);
+  }
+
+  .btn-lime {
+    background-color: #D7EE73;
+    color: #1D1C19;
+    border: 1px solid #1D1C19;
+    font-weight: 600;
+    padding: 0.5rem 1.25rem;
+    box-shadow: 2px 2px 0px 0px #1D1C19;
+    transition: all 0.15s ease;
+  }
+  .btn-lime:hover {
+    background-color: #C8E25C;
+    box-shadow: 3px 3px 0px 0px #1D1C19;
+    transform: translate(-1px, -1px);
+  }
+
+  .btn-secondary {
+    background-color: #FAF7F2;
+    color: #1D1C19;
+    border: 1px solid #1D1C19;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    box-shadow: 2px 2px 0px 0px #1D1C19;
+    transition: all 0.15s ease;
+  }
+  .btn-secondary:hover {
+    background-color: #E8E1D5;
+    box-shadow: 3px 3px 0px 0px #1D1C19;
+    transform: translate(-1px, -1px);
+  }
+
+  /* Grid paper background pattern */
+  .bg-grid-editorial {
+    background-size: 24px 24px;
+    background-image: 
+      linear-gradient(to right, rgba(29, 28, 25, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(29, 28, 25, 0.05) 1px, transparent 1px);
+  }
+}

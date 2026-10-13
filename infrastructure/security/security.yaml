@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Security Foundations (Security Groups, Least-Privilege IAM Roles, and Policies)'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC identifier for security group placement
+
+Resources:
+  # 1. Application Load Balancer Security Group (Public Web Traffic)
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow inbound HTTP and HTTPS to CloudDeploy ALB'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-alb-sg'
+
+  # 2. EC2 Spring Boot App Security Group (Only Accessible from ALB)
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow inbound API traffic on 8080 strictly from ALB Security Group'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-app-sg'
+
+  # 3. RDS MySQL Security Group (Only Accessible from EC2 App SG)
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allow inbound MySQL traffic on 3306 strictly from App Security Group'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref AppSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-rds-sg'
+
+  # 4. IAM Role for EC2 Backend Workload
+  BackendInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'clouddeploy-${EnvironmentName}-backend-ec2-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Policies:
+        - PolicyName: CloudDeployBackendLeastPrivilege
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # S3 Staging & Published Bucket Access
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:DeleteObject'
+                  - 's3:ListBucket'
+                Resource:
+                  - !Sub 'arn:aws:s3:::clouddeploy-*'
+                  - !Sub 'arn:aws:s3:::clouddeploy-*/*'
+              # CloudFront Invalidation
+              - Effect: Allow
+                Action:
+                  - 'cloudfront:CreateInvalidation'
+                  - 'cloudfront:GetInvalidation'
+                Resource: '*'
+              # Secrets Manager
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:GetSecretValue'
+                  - 'secretsmanager:DescribeSecret'
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:clouddeploy/*'
+              # CloudWatch Logs & Metrics
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'logs:DescribeLogStreams'
+                  - 'cloudwatch:PutMetricData'
+                Resource: '*'
+              # SNS Operational Alerts
+              - Effect: Allow
+                Action:
+                  - 'sns:Publish'
+                Resource: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:clouddeploy-*'
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-backend-role'
+
+  BackendInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub 'clouddeploy-${EnvironmentName}-backend-profile'
+      Roles:
+        - !Ref BackendInstanceRole
+
+Outputs:
+  AlbSecurityGroupId:
+    Value: !Ref AlbSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AlbSgId'
+
+  AppSecurityGroupId:
+    Value: !Ref AppSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-AppSgId'
+
+  RdsSecurityGroupId:
+    Value: !Ref RdsSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-RdsSgId'
+
+  BackendInstanceProfileArn:
+    Value: !GetAtt BackendInstanceProfile.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-BackendInstanceProfileArn'

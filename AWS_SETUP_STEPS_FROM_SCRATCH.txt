@@ -1,0 +1,283 @@
+================================================================================
+CLOUDFEPLOY — SIMPLE AWS SETUP & STEP-BY-STEP BUILD GUIDE (FROM SCRATCH)
+================================================================================
+Target AWS Region: ap-south-1 (Asia Pacific — Mumbai)
+AWS Account ID:    941905484053
+IAM Admin User:    clouddeploy-admin-user
+Access Key ID:     <YOUR_AWS_ACCESS_KEY_ID>
+================================================================================
+
+This guide replaces the complex enterprise VPC / Auto Scaling architecture with
+the SIMPLEST, FASTEST, and ZERO-WASTE setup. You only need 3 core AWS services:
+  1. Amazon S3 (2 buckets: Uploads Staging + Published Static Sites)
+  2. Amazon Cognito (User Pool for login and user management)
+  3. Amazon CloudFront (Optional edge CDN for fast site delivery)
+
+No expensive NAT Gateways ($32/month saved), no complicated VPC subnets,
+and no Auto Scaling Groups needed.
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Step 1: Create 2 S3 Buckets in AWS Console (2 Minutes)
+2. Step 2: Create Amazon Cognito User Pool (2 Minutes)
+3. Step 3: Create Amazon CloudFront Distribution (Optional CDN, 2 Minutes)
+4. Step 4: Ready-to-Use .env Configuration Files
+5. Step 5: Build and Run the Complete Project From Scratch
+6. Step 6: Test Your First Live Static Website Deployment
+7. Step 7: Simple EC2 Production Deployment (Zero NAT Gateway / Zero ALB)
+================================================================================
+
+
+================================================================================
+1. STEP 1: CREATE 2 S3 BUCKETS IN AWS CONSOLE (2 MINUTES)
+================================================================================
+
+Login to AWS Console: https://console.aws.amazon.com
+Make sure the top-right region is set to: Asia Pacific (Mumbai) ap-south-1.
+
+1.1 Bucket 1 — Staging Uploads Bucket (Stores incoming ZIP files)
+-----------------------------------------------------------------
+1. Search "S3" in the AWS search bar and click "S3".
+2. Click the orange button: "Create bucket".
+3. Bucket name:
+   `clouddeploy-uploads-941905484053-ap-south-1`
+4. AWS Region: Select `Asia Pacific (Mumbai) ap-south-1`.
+5. Block Public Access settings:
+   - Keep "Block all public access" CHECKED [x] (100% private and secure).
+6. Default encryption:
+   - Select "Server-side encryption with Amazon S3 managed keys (SSE-S3)".
+7. Click "Create bucket" at the bottom.
+
+1.2 Bucket 2 — Published Sites Bucket (Stores unzipped static website files)
+---------------------------------------------------------------------------
+1. In S3, click "Create bucket" again.
+2. Bucket name:
+   `clouddeploy-sites-941905484053-ap-south-1`
+3. AWS Region: Select `Asia Pacific (Mumbai) ap-south-1`.
+4. Block Public Access settings:
+   - Keep "Block all public access" CHECKED [x].
+5. Default encryption: SSE-S3.
+6. Click "Create bucket" at the bottom.
+
+That's it! Your S3 storage foundation is completely ready.
+
+
+================================================================================
+2. STEP 2: CREATE AMAZON COGNITO USER POOL (2 MINUTES)
+================================================================================
+
+Provides user registration, login, and authentication tokens.
+
+1. Search "Cognito" in the AWS search bar and click "Cognito".
+2. Click the orange button: "Create user pool".
+3. Step 1 (Sign-in experience):
+   - Under Cognito user pool sign-in options, check: `Email` [x].
+   - Click "Next".
+4. Step 2 (Security requirements):
+   - Password policy: Select "Cognito defaults".
+   - Multi-factor authentication (MFA): Select `No MFA` (for simple testing).
+   - User account recovery: Check `Enable self-service account recovery` (Email only).
+   - Click "Next".
+5. Step 3 (Sign-up experience):
+   - Check `Enable self-registration` [x].
+   - Required attributes: Check `email` [x].
+   - Click "Next".
+6. Step 4 (Message delivery):
+   - Email provider: Select `Send email with Cognito`.
+   - Click "Next".
+7. Step 5 (Integrate your app):
+   - User pool name: `clouddeploy-users`
+   - Hosted authentication pages: Leave unchecked.
+   - Initial app client:
+     * App type: Select `Public client`
+     * App client name: `clouddeploy-client`
+     * Client secret: Select `Don't generate a client secret` (CRITICAL for web apps).
+   - Click "Next".
+8. Step 6: Review and click "Create user pool".
+
+Copy these 2 values into your notes:
+- User Pool ID: (e.g., `ap-south-1_xxxxxxxxx`) from Pool Overview.
+- App Client ID: (e.g., `7a8b9c0d1e2f3g4h5i6j7k8l9m`) from "App integration" tab.
+
+
+================================================================================
+3. STEP 3: CREATE AMAZON CLOUDFRONT DISTRIBUTION (OPTIONAL CDN, 2 MINUTES)
+================================================================================
+
+Distributes your static websites globally with SSL and caching.
+
+1. Search "CloudFront" and click "CloudFront".
+2. Click "Create distribution".
+3. Origin domain:
+   - Click the box and select your sites bucket:
+     `clouddeploy-sites-941905484053-ap-south-1.s3.ap-south-1.amazonaws.com`
+4. Origin access:
+   - Select: `Origin access control settings (recommended)`
+   - Click "Create control setting" -> Click "Create".
+5. Default cache behavior:
+   - Viewer protocol policy: Select `Redirect HTTP to HTTPS`.
+   - Allowed HTTP methods: Select `GET, HEAD, OPTIONS`.
+   - Cache key and origin requests: Select `Cache policy: CachingOptimized`.
+6. Custom error responses (Crucial for React / Vue Single Page Apps):
+   - Under "Custom error responses", click "Add custom error response":
+     * HTTP error code: `404: Not Found`
+     * Customize error response: `Yes`
+     * Response page path: `/index.html`
+     * HTTP response code: `200: OK`
+     * Error caching minimum TTL: `10`
+7. Click "Create distribution" at the bottom.
+8. Copy Policy to S3:
+   - CloudFront will show a blue alert banner: "You need to update your S3 bucket policy".
+   - Click "Copy policy".
+   - Open S3 in a new tab -> click `clouddeploy-sites-941905484053-ap-south-1` -> "Permissions" tab.
+   - Scroll down to "Bucket policy" -> Click "Edit" -> Paste the policy -> Click "Save changes".
+9. Copy your CloudFront Domain:
+   - In CloudFront, copy `Distribution domain name` (e.g. `d111111abcdef8.cloudfront.net`).
+
+
+================================================================================
+4. STEP 4: READY-TO-USE .ENV CONFIGURATION FILES
+================================================================================
+
+4.1 Backend Environment File: `backend/.env` (and root `.env`):
+```ini
+# Spring Boot Configuration
+SPRING_PROFILES_ACTIVE=local
+SERVER_PORT=8080
+
+# AWS Programmatic Access Credentials (Configure with your IAM keys)
+AWS_ACCESS_KEY_ID=<YOUR_AWS_ACCESS_KEY_ID>
+AWS_SECRET_ACCESS_KEY=<YOUR_AWS_SECRET_ACCESS_KEY>
+AWS_REGION=ap-south-1
+
+# Storage Mode (s3 = uploads directly to your real AWS S3 buckets)
+APP_STORAGE_MODE=s3
+AWS_S3_UPLOAD_BUCKET=clouddeploy-uploads-941905484053-ap-south-1
+AWS_S3_SITE_BUCKET=clouddeploy-sites-941905484053-ap-south-1
+
+# Amazon Cognito User Authentication (Live Provisioned)
+AWS_COGNITO_USER_POOL_ID=ap-south-1_lM8ZvZyah
+AWS_COGNITO_CLIENT_ID=59ofng9j08tj6ftf5rmosqv0m4
+AWS_COGNITO_REGION=ap-south-1
+
+# Amazon CloudFront Distribution (Live Edge CDN)
+AWS_CLOUDFRONT_DISTRIBUTION_ID=E2VP7RB0IJ10UB
+AWS_CLOUDFRONT_DOMAIN=d2cxu429uj7b19.cloudfront.net
+
+# AWS Secrets Manager & SNS Alerts
+AWS_RDS_SECRET_ARN=arn:aws:secretsmanager:ap-south-1:941905484053:secret:clouddeploy/prod/rds/credentials-3wChku
+AWS_CLOUDWATCH_LOG_GROUP=/aws/clouddeploy/application
+AWS_SNS_ALERTS_TOPIC_ARN=arn:aws:sns:ap-south-1:941905484053:clouddeploy-ops-alerts
+
+# Platform Quotas
+APP_BASE_DOMAIN=sites.clouddeploy.internal
+APP_UPLOAD_MAX_BYTES=52428800
+APP_MAX_FILES_PER_DEPLOYMENT=1000
+APP_MAX_EXTRACTED_BYTES=262144000
+APP_MAX_PROJECTS_PER_USER=10
+JWT_SECRET=c9f8a3e7b1d46502a839e5f1b2c4d6a8e0f2b4c6d8e0a2b4c6d8e0f2a4b6c8d0
+```
+
+4.2 Frontend Environment File: `frontend/.env.local`:
+```ini
+# Centralized Backend API URL
+VITE_API_BASE_URL=http://localhost:8080/api
+
+# Offline Demo Mode:
+# set to 'false' to communicate with live Spring Boot backend & real AWS S3
+VITE_DEMO_MODE=false
+
+# Amazon Cognito Public Configuration (Live Provisioned)
+VITE_COGNITO_USER_POOL_ID=ap-south-1_lM8ZvZyah
+VITE_COGNITO_CLIENT_ID=59ofng9j08tj6ftf5rmosqv0m4
+VITE_COGNITO_REGION=ap-south-1
+```
+
+
+================================================================================
+5. STEP 5: BUILD AND RUN THE COMPLETE PROJECT FROM SCRATCH
+================================================================================
+
+Run everything directly on your computer in 2 simple terminal windows.
+
+5.1 Start the Spring Boot Backend (Terminal 1)
+---------------------------------------------
+1. Open PowerShell / Command Prompt:
+   ```powershell
+   cd backend
+   mvn spring-boot:run
+   ```
+2. The backend starts on: http://localhost:8080
+   - Uses embedded in-memory H2 database (Zero setup required!).
+   - Automatically initializes the database schema with Flyway.
+   - Connects to your real AWS S3 buckets in Mumbai using your AWS keys.
+   - Health check endpoint: http://localhost:8080/actuator/health (Status: UP).
+
+5.2 Start the React Frontend (Terminal 2)
+-----------------------------------------
+1. Open a second PowerShell / Command Prompt:
+   ```powershell
+   cd frontend
+   npm install
+   npm run dev
+   ```
+2. Open your browser: http://localhost:5173
+   - The CloudDeploy modern UI will load immediately.
+
+
+================================================================================
+6. STEP 6: TEST YOUR FIRST LIVE STATIC WEBSITE DEPLOYMENT
+================================================================================
+
+Now that both backend and frontend are running:
+
+1. Open http://localhost:5173 in your browser.
+2. Login with the demo administrator credentials (or register a new user).
+3. Click "New Project" (e.g., project name: `portfolio-site`).
+4. Prepare a test ZIP file:
+   - Create a folder with an `index.html` file (e.g. `<h1>Hello CloudDeploy!</h1>`).
+   - Right-click folder -> "Compress to ZIP file" -> name it `website.zip`.
+5. In CloudDeploy UI:
+   - Click "Deploy Website" -> Drag and drop `website.zip`.
+   - Click "Upload and Deploy".
+6. What happens behind the scenes:
+   - Backend receives `website.zip`.
+   - Validates archive against ZIP Slip & decompression bomb attacks.
+   - Uploads archive to S3 Staging bucket: `clouddeploy-uploads-941905484053-ap-south-1`.
+   - Unzips static assets and publishes files to S3 Sites bucket: `clouddeploy-sites-941905484053-ap-south-1`.
+   - Generates live deployment URL.
+7. Click the live URL to see your deployed static website!
+
+
+================================================================================
+7. STEP 7: SIMPLE EC2 HOSTING (WHEN READY TO PUT ON THE CLOUD)
+================================================================================
+
+When you want your backend running 24/7 on AWS without paying for expensive
+ALBs and NAT Gateways:
+
+1. Go to AWS Console -> EC2 -> "Launch instance".
+2. Name: `clouddeploy-backend-server`
+3. OS: `Amazon Linux 2023` (Architecture: `64-bit (Arm)` or `x86`).
+4. Instance type: `t4g.small` (Free tier / low cost ~$0.016/hr).
+5. Network settings:
+   - Keep Default VPC.
+   - Check "Allow HTTP traffic from the internet" [x].
+   - Add Custom TCP Rule: Port `8080` from `0.0.0.0/0`.
+6. Click "Launch instance".
+7. Connect to instance and run:
+   ```bash
+   sudo yum install -y java-21-amazon-corretto-headless
+   # Copy backend jar:
+   java -jar clouddeploy-backend-1.0.0.jar
+   ```
+8. Build frontend:
+   ```bash
+   cd frontend
+   npm run build
+   # frontend/dist/ can be served by Nginx or S3 static website hosting
+   ```
+
+No complicated networking, no hidden $30 NAT Gateway fees, clean and simple!
+================================================================================

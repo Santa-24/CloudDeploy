@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: clouddeploy-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+# CloudDeploy Platform Core Properties
+app:
+  base-domain: ${APP_BASE_DOMAIN:sites.clouddeploy.internal}
+  upload-max-bytes: ${APP_UPLOAD_MAX_BYTES:52428800} # 50 MB
+  max-files-per-deployment: ${APP_MAX_FILES_PER_DEPLOYMENT:1000}
+  max-extracted-bytes: ${APP_MAX_EXTRACTED_BYTES:262144000} # 250 MB
+  max-projects-per-user: ${APP_MAX_PROJECTS_PER_USER:3}
+  jwt-secret: ${JWT_SECRET:clouddeploy-secure-jwt-signing-key-production-change-me-32chars}
+  storage-mode: ${APP_STORAGE_MODE:local}
+  demo-auth-enabled: ${APP_DEMO_AUTH_ENABLED:true}
+
+# AWS Service Configuration
+aws:
+  region: ${AWS_REGION:ap-south-1}
+  access-key-id: ${AWS_ACCESS_KEY_ID:}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
+  s3:
+    upload-bucket: ${AWS_S3_UPLOAD_BUCKET:clouddeploy-uploads-staging}
+    site-bucket: ${AWS_S3_SITE_BUCKET:clouddeploy-sites-published}
+  cloudfront:
+    distribution-id: ${AWS_CLOUDFRONT_DISTRIBUTION_ID:E1EXAMPLECLOUDFRONT}
+    domain: ${AWS_CLOUDFRONT_DOMAIN:d111111abcdef8.cloudfront.net}
+  cognito:
+    user-pool-id: ${AWS_COGNITO_USER_POOL_ID:ap-south-1_examplePoolId}
+    client-id: ${AWS_COGNITO_CLIENT_ID:exampleClientId123}
+    region: ${AWS_COGNITO_REGION:ap-south-1}
+  cloudwatch:
+    log-group: ${AWS_CLOUDWATCH_LOG_GROUP:/aws/clouddeploy/application}
+  sns:
+    alerts-topic-arn: ${AWS_SNS_ALERTS_TOPIC_ARN:}

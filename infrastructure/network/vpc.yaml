@@ -1,0 +1,251 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Isolated Multi-AZ Network Infrastructure (VPC, Subnets, Gateways, Route Tables)'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment label
+
+  VpcCIDR:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: Primary CIDR block for CloudDeploy VPC
+
+  PublicSubnet1CIDR:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: CIDR block for Public Subnet 1 (AZ A)
+
+  PublicSubnet2CIDR:
+    Type: String
+    Default: 10.0.2.0/24
+    Description: CIDR block for Public Subnet 2 (AZ B)
+
+  PrivateAppSubnet1CIDR:
+    Type: String
+    Default: 10.0.10.0/24
+    Description: CIDR block for Private Compute Subnet 1 (AZ A)
+
+  PrivateAppSubnet2CIDR:
+    Type: String
+    Default: 10.0.11.0/24
+    Description: CIDR block for Private Compute Subnet 2 (AZ B)
+
+  PrivateDbSubnet1CIDR:
+    Type: String
+    Default: 10.0.20.0/24
+    Description: CIDR block for Private RDS Subnet 1 (AZ A)
+
+  PrivateDbSubnet2CIDR:
+    Type: String
+    Default: 10.0.21.0/24
+    Description: CIDR block for Private RDS Subnet 2 (AZ B)
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-vpc'
+        - Key: Platform
+          Value: CloudDeploy
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-igw'
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Public Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1CIDR
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-public-az1'
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2CIDR
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-public-az2'
+
+  # Private Compute Subnets
+  PrivateAppSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateAppSubnet1CIDR
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-app-private-az1'
+
+  PrivateAppSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateAppSubnet2CIDR
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-app-private-az2'
+
+  # Private Database Subnets
+  PrivateDbSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateDbSubnet1CIDR
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-db-private-az1'
+
+  PrivateDbSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateDbSubnet2CIDR
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-db-private-az2'
+
+  # NAT Gateway for Outbound Egress from Private Subnets
+  NatEip:
+    Type: AWS::EC2::EIP
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-nat-eip'
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-nat'
+
+  # Routing Tables
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-public-rt'
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociationPublic1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetRouteTableAssociationPublic2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-private-rt'
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  SubnetRouteTableAssociationPrivateApp1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateAppSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  SubnetRouteTableAssociationPrivateApp2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateAppSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+Outputs:
+  VpcId:
+    Description: VPC Identifier
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${AWS::StackName}-VpcId'
+
+  PublicSubnet1Id:
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnet1'
+
+  PublicSubnet2Id:
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicSubnet2'
+
+  PrivateAppSubnet1Id:
+    Value: !Ref PrivateAppSubnet1
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateAppSubnet1'
+
+  PrivateAppSubnet2Id:
+    Value: !Ref PrivateAppSubnet2
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateAppSubnet2'
+
+  PrivateDbSubnet1Id:
+    Value: !Ref PrivateDbSubnet1
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateDbSubnet1'
+
+  PrivateDbSubnet2Id:
+    Value: !Ref PrivateDbSubnet2
+    Export:
+      Name: !Sub '${AWS::StackName}-PrivateDbSubnet2'

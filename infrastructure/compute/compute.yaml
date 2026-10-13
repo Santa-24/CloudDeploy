@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Application Load Balancer, Launch Template, and Auto Scaling Group'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+
+  VpcId:
+    Type: String
+    Description: VPC identifier
+
+  PublicSubnet1:
+    Type: String
+    Description: Public Subnet 1 for ALB
+
+  PublicSubnet2:
+    Type: String
+    Description: Public Subnet 2 for ALB
+
+  PrivateAppSubnet1:
+    Type: String
+    Description: Private Subnet 1 for EC2 compute
+
+  PrivateAppSubnet2:
+    Type: String
+    Description: Private Subnet 2 for EC2 compute
+
+  AlbSecurityGroupId:
+    Type: String
+    Description: ALB Security Group
+
+  AppSecurityGroupId:
+    Type: String
+    Description: EC2 Backend App Security Group
+
+  BackendInstanceProfileArn:
+    Type: String
+    Description: IAM Instance Profile ARN for EC2
+
+  InstanceType:
+    Type: String
+    Default: t4g.small
+    Description: EC2 instance type (Graviton / Arm64)
+
+Resources:
+  # 1. Application Load Balancer
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub 'clouddeploy-${EnvironmentName}-alb'
+      Type: application
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref AlbSecurityGroupId
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-alb'
+
+  # 2. Target Group for Spring Boot Backend on Port 8080
+  AlbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub 'clouddeploy-${EnvironmentName}-tg'
+      Port: 8080
+      Protocol: HTTP
+      VpcId: !Ref VpcId
+      TargetType: instance
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: '8080'
+      HealthCheckPath: /actuator/health
+      HealthCheckIntervalSeconds: 15
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher:
+        HttpCode: '200'
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-tg'
+
+  # 3. HTTP Listener (Port 80)
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AlbTargetGroup
+
+  # 4. EC2 Launch Template with Amazon Linux 2023 & Java 21
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub 'clouddeploy-${EnvironmentName}-lt'
+      LaunchTemplateData:
+        InstanceType: !Ref InstanceType
+        IamInstanceProfile:
+          Arn: !Ref BackendInstanceProfileArn
+        SecurityGroupIds:
+          - !Ref AppSecurityGroupId
+        ImageId: resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum update -y
+            yum install -y java-21-amazon-corretto-headless awscli
+            mkdir -p /opt/clouddeploy
+            # In live production CodeDeploy / CI/CD pipeline deploys application jar here
+            cat << 'EOF' > /etc/systemd/system/clouddeploy.service
+            [Unit]
+            Description=CloudDeploy Spring Boot Backend
+            After=network.target
+
+            [Service]
+            Type=simple
+            User=root
+            WorkingDirectory=/opt/clouddeploy
+            ExecStart=/usr/bin/java -Dspring.profiles.active=prod -jar /opt/clouddeploy/clouddeploy-backend-1.0.0.jar
+            Restart=always
+            RestartSec=10
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            systemctl daemon-reload
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub 'clouddeploy-${EnvironmentName}-backend'
+
+  # 5. Auto Scaling Group
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Sub 'clouddeploy-${EnvironmentName}-asg'
+      VPCZoneIdentifier:
+        - !Ref PrivateAppSubnet1
+        - !Ref PrivateAppSubnet2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      MinSize: '1'
+      MaxSize: '3'
+      DesiredCapacity: '1'
+      TargetGroupARNs:
+        - !Ref AlbTargetGroup
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-instance'
+          PropagateAtLaunch: true
+
+Outputs:
+  AlbDnsName:
+    Description: Public Load Balancer DNS Name
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub '${AWS::StackName}-AlbDnsName'
+
+  TargetGroupArn:
+    Value: !Ref AlbTargetGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-TargetGroupArn'

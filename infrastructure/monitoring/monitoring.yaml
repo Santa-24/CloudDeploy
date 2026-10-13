@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Observability (CloudWatch Log Groups, Metric Alarms, and SNS Notifications)'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+
+  TargetGroupArn:
+    Type: String
+    Description: Target Group ARN for health metrics
+
+Resources:
+  # 1. CloudWatch Log Group
+  ApplicationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/clouddeploy/${EnvironmentName}/application'
+      RetentionInDays: 30
+      Tags:
+        - Key: Platform
+          Value: CloudDeploy
+
+  # 2. SNS Operational Alerts Topic
+  OpsAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'clouddeploy-${EnvironmentName}-ops-alerts'
+      DisplayName: 'CloudDeploy Operational Alarms'
+
+  # 3. CloudWatch Alarm: Unhealthy Target Count
+  UnhealthyHostAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'clouddeploy-${EnvironmentName}-unhealthy-hosts'
+      AlarmDescription: 'Triggers when backend instances fail ALB health checks'
+      MetricName: UnHealthyHostCount
+      Namespace: AWS/ApplicationELB
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref OpsAlertsTopic
+
+Outputs:
+  LogGroupName:
+    Value: !Ref ApplicationLogGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-LogGroupName'
+
+  AlertsTopicArn:
+    Value: !Ref OpsAlertsTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-AlertsTopicArn'

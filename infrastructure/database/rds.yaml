@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Amazon RDS MySQL and AWS Secrets Manager Credentials'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+
+  PrivateDbSubnet1:
+    Type: String
+    Description: Subnet ID for RDS multi-AZ placement A
+
+  PrivateDbSubnet2:
+    Type: String
+    Description: Subnet ID for RDS multi-AZ placement B
+
+  RdsSecurityGroupId:
+    Type: String
+    Description: Security Group ID allowing inbound port 3306
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+    Description: RDS instance compute tier
+
+  MultiAZ:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Multi-AZ failover deployment flag
+
+Resources:
+  # Secrets Manager Secret for Master DB Credentials
+  RdsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub 'clouddeploy/${EnvironmentName}/rds/credentials'
+      Description: 'Master database credentials for CloudDeploy MySQL instance'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "clouddeploy_admin"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\\'
+      Tags:
+        - Key: Platform
+          Value: CloudDeploy
+
+  # DB Subnet Group across private DB subnets
+  RdsSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'Private subnet group for CloudDeploy RDS'
+      SubnetIds:
+        - !Ref PrivateDbSubnet1
+        - !Ref PrivateDbSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-db-subnet-group'
+
+  # DB Parameter Group for utf8mb4 and UTC timezone
+  RdsParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: 'Optimized parameter group for CloudDeploy MySQL'
+      Family: mysql8.0
+      Parameters:
+        character_set_server: utf8mb4
+        collation_server: utf8mb4_unicode_ci
+        time_zone: UTC
+
+  # RDS DB Instance
+  RdsInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub 'clouddeploy-${EnvironmentName}-mysql'
+      DBName: clouddeploy
+      AllocatedStorage: 20
+      MaxAllocatedStorage: 100
+      StorageType: gp3
+      StorageEncrypted: true
+      Engine: mysql
+      EngineVersion: '8.0'
+      DBInstanceClass: !Ref DBInstanceClass
+      MultiAZ: !Ref MultiAZ
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref RdsSubnetGroup
+      DBParameterGroupName: !Ref RdsParameterGroup
+      VPCSecurityGroups:
+        - !Ref RdsSecurityGroupId
+      MasterUsername: '{{resolve:secretsmanager:' !Sub '${RdsSecret}:SecretString:username}}'
+      MasterUserPassword: '{{resolve:secretsmanager:' !Sub '${RdsSecret}:SecretString:password}}'
+      BackupRetentionPeriod: 7
+      PreferredBackupWindow: '03:00-04:00'
+      PreferredMaintenanceWindow: 'sun:04:30-sun:05:30'
+      DeletionProtection: false # Set true for strict enterprise production
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-mysql'
+
+Outputs:
+  RdsEndpoint:
+    Description: RDS Hostname Endpoint
+    Value: !GetAtt RdsInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-RdsEndpoint'
+
+  RdsPort:
+    Description: RDS Port
+    Value: !GetAtt RdsInstance.Endpoint.Port
+    Export:
+      Name: !Sub '${AWS::StackName}-RdsPort'
+
+  RdsSecretArn:
+    Description: Secrets Manager Secret ARN
+    Value: !Ref RdsSecret
+    Export:
+      Name: !Sub '${AWS::StackName}-RdsSecretArn'

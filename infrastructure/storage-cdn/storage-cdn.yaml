@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Amazon S3 Buckets, CloudFront Origin Access Control, and Edge CDN Distribution'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+
+Resources:
+  # 1. Staging Bucket for Temporary ZIP Uploads
+  UploadStagingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'clouddeploy-${EnvironmentName}-uploads-${AWS::AccountId}-${AWS::Region}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanOldStagingUploads
+            Status: Enabled
+            ExpirationInDays: 7
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-staging-uploads'
+
+  # 2. Published Static Websites Bucket
+  SiteAssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'clouddeploy-${EnvironmentName}-sites-${AWS::AccountId}-${AWS::Region}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-published-sites'
+
+  # 3. CloudFront Origin Access Control (OAC)
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub 'clouddeploy-${EnvironmentName}-s3-oac'
+        Description: 'Origin Access Control for CloudDeploy private S3 origins'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # 4. CloudFront Distribution for Published Websites
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub 'CloudDeploy Edge Distribution (${EnvironmentName})'
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100 # Cost-effective edge PoPs (North America and Europe)
+        Origins:
+          - Id: S3SiteAssetsOrigin
+            DomainName: !GetAtt SiteAssetsBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt CloudFrontOAC.Id
+            S3OriginConfig: {}
+        DefaultCacheBehavior:
+          TargetOriginId: S3SiteAssetsOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized managed policy
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 10
+      Tags:
+        - Key: Name
+          Value: !Sub 'clouddeploy-${EnvironmentName}-cdn'
+
+  # 5. S3 Bucket Policy allowing CloudFront OAC principal strictly
+  SiteAssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteAssetsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: 's3:GetObject'
+            Resource: !Sub '${SiteAssetsBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${SiteDistribution}'
+
+Outputs:
+  UploadBucketName:
+    Value: !Ref UploadStagingBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-UploadBucketName'
+
+  SiteBucketName:
+    Value: !Ref SiteAssetsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-SiteBucketName'
+
+  DistributionId:
+    Value: !Ref SiteDistribution
+    Export:
+      Name: !Sub '${AWS::StackName}-DistributionId'
+
+  DistributionDomain:
+    Value: !GetAtt SiteDistribution.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-DistributionDomain'

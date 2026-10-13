@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudDeploy - Master Orchestrator Stack Provisioning Multi-Tenant Static Platform'
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+    Description: Environment stage moniker
+
+  TemplateBaseUrl:
+    Type: String
+    Default: 'https://s3.amazonaws.com/clouddeploy-cfn-templates'
+    Description: S3 base URL for nested stack templates
+
+Resources:
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub '${TemplateBaseUrl}/network/vpc.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+
+  SecurityStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      TemplateURL: !Sub '${TemplateBaseUrl}/security/security.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SecurityStack
+    Properties:
+      TemplateURL: !Sub '${TemplateBaseUrl}/database/rds.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        PrivateDbSubnet1: !GetAtt NetworkStack.Outputs.PrivateDbSubnet1Id
+        PrivateDbSubnet2: !GetAtt NetworkStack.Outputs.PrivateDbSubnet2Id
+        RdsSecurityGroupId: !GetAtt SecurityStack.Outputs.RdsSecurityGroupId
+
+  StorageCdnStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub '${TemplateBaseUrl}/storage-cdn/storage-cdn.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+
+  ComputeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: [SecurityStack, DatabaseStack]
+    Properties:
+      TemplateURL: !Sub '${TemplateBaseUrl}/compute/compute.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        PublicSubnet1: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
+        PublicSubnet2: !GetAtt NetworkStack.Outputs.PublicSubnet2Id
+        PrivateAppSubnet1: !GetAtt NetworkStack.Outputs.PrivateAppSubnet1Id
+        PrivateAppSubnet2: !GetAtt NetworkStack.Outputs.PrivateAppSubnet2Id
+        AlbSecurityGroupId: !GetAtt SecurityStack.Outputs.AlbSecurityGroupId
+        AppSecurityGroupId: !GetAtt SecurityStack.Outputs.AppSecurityGroupId
+        BackendInstanceProfileArn: !GetAtt SecurityStack.Outputs.BackendInstanceProfileArn
+
+  MonitoringStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ComputeStack
+    Properties:
+      TemplateURL: !Sub '${TemplateBaseUrl}/monitoring/monitoring.yaml'
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        TargetGroupArn: !GetAtt ComputeStack.Outputs.TargetGroupArn
+
+Outputs:
+  ApiEndpoint:
+    Description: Public API Load Balancer Address
+    Value: !GetAtt ComputeStack.Outputs.AlbDnsName
+
+  CloudFrontDomain:
+    Description: Public CDN Distribution Domain
+    Value: !GetAtt StorageCdnStack.Outputs.DistributionDomain

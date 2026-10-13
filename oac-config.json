@@ -1,0 +1,7 @@
+{
+  "Name": "clouddeploy-sites-oac",
+  "Description": "OAC for CloudDeploy",
+  "SigningProtocol": "sigv4",
+  "SigningBehavior": "always",
+  "OriginAccessControlOriginType": "s3"
+}

@@ -1,0 +1,66 @@
+# CloudDeploy Platform - Git Ignore Rules
+
+# Environment & Secrets (CRITICAL: Never commit AWS keys, credentials, or tokens)
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.credentials
+secrets/
+
+# Database Files & Local Storage
+*.db
+*.mv.db
+*.trace.db
+storage/
+**/storage/
+uploads/
+**/uploads/
+
+# Java / Spring Boot / Maven
+target/
+**/target/
+.mvn/
+**/.mvn/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+**/logs/
+.flattened-pom.xml
+
+# Node.js / Vite / React / Frontend
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+**/*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDEs, Editors & Tooling
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.patch
+
+# OS System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
