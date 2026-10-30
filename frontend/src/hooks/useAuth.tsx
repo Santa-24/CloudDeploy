@@ -23,9 +23,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initAuth = async () => {
       try {
-        if (token) {
+        if (token || demoMode) {
           const currentUser = await authService.getCurrentUser();
           setUser(currentUser);
+          if (demoMode && !token) {
+            const demoToken = 'demo-jwt-token-clouddeploy-aws-cognito-simulated';
+            apiClient.setToken(demoToken);
+            setToken(demoToken);
+          }
         }
       } catch (err) {
         console.warn('Initial session validation skipped or expired:', err);

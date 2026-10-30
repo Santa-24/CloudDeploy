@@ -73,6 +73,7 @@ export const UploadDeployPage: React.FC = () => {
       {selectedSiteId ? (
         <ZipDropzone
           siteId={selectedSiteId}
+          initialRegion={sites.find(s => s.id === selectedSiteId)?.region}
           onDeploymentComplete={handleDeploymentComplete}
         />
       ) : (

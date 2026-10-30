@@ -32,7 +32,7 @@ export const deploymentService = {
     return await apiClient.request<DeploymentEvent[]>(`/deployments/${deploymentId}/events`);
   },
 
-  async deployArchive(siteId: string, file: File): Promise<Deployment> {
+  async deployArchive(siteId: string, file: File, region?: string): Promise<Deployment> {
     if (apiClient.isDemoMode()) {
       await new Promise(r => setTimeout(r, 600));
       const newVersion = ((demoDeploymentsMap[siteId] || [])[0]?.version || 0) + 1;
@@ -42,6 +42,7 @@ export const deploymentService = {
         siteId,
         version: newVersion,
         status: 'SUCCEEDED',
+        region: region || 'ap-south-1',
         s3Prefix: `sites/${siteId}/deployments/${depId}/`,
         liveUrl: `https://sites.clouddeploy.internal/s/${siteId}/`,
         fileCount: 14,
@@ -56,7 +57,11 @@ export const deploymentService = {
       return newDep;
     }
 
-    return await apiClient.uploadArchive<Deployment>(`/sites/${siteId}/deployments`, file);
+    const queryParams: Record<string, string> = {};
+    if (region) {
+      queryParams['region'] = region;
+    }
+    return await apiClient.uploadArchive<Deployment>(`/sites/${siteId}/deployments`, file, queryParams);
   },
 
   async rollback(siteId: string, targetDeploymentId: string): Promise<Deployment> {

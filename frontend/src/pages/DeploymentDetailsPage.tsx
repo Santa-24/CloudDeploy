@@ -8,7 +8,7 @@ import { Skeleton } from '../components/Skeleton';
 import { DeploymentTimeline } from '../features/DeploymentTimeline';
 import { Deployment, DeploymentEvent } from '../types';
 import { deploymentService } from '../services/deploymentService';
-import { ArrowLeft, ExternalLink, HardDrive, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, HardDrive, AlertTriangle, CheckCircle2, Globe } from 'lucide-react';
 
 export const DeploymentDetailsPage: React.FC = () => {
   const { deploymentId } = useParams<{ deploymentId: string }>();
@@ -75,6 +75,13 @@ export const DeploymentDetailsPage: React.FC = () => {
               <div className="flex justify-between py-1 border-b border-stone-subtle">
                 <span className="text-ink-faint">Release Version:</span>
                 <span className="font-bold text-ink">v{deployment.version}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-stone-subtle">
+                <span className="text-ink-faint">AWS Target Region:</span>
+                <span className="font-bold text-ink inline-flex items-center gap-1">
+                  <Globe className="w-3.5 h-3.5 text-vermilion" />
+                  {deployment.region || 'ap-south-1'}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-stone-subtle">
                 <span className="text-ink-faint">Deployment ID:</span>

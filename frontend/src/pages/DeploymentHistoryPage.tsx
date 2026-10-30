@@ -8,7 +8,7 @@ import { RollbackModal } from '../features/RollbackModal';
 import { Deployment, Site } from '../types';
 import { deploymentService } from '../services/deploymentService';
 import { siteService } from '../services/siteService';
-import { ArrowLeft, RotateCcw, ExternalLink, ArrowRight, AlertCircle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ExternalLink, ArrowRight, AlertCircle, Globe } from 'lucide-react';
 
 export const DeploymentHistoryPage: React.FC = () => {
   const { siteId } = useParams<{ siteId: string }>();
@@ -67,6 +67,7 @@ export const DeploymentHistoryPage: React.FC = () => {
             <tr>
               <th className="p-3.5">Version</th>
               <th className="p-3.5">Deployment ID</th>
+              <th className="p-3.5">Region</th>
               <th className="p-3.5">Status</th>
               <th className="p-3.5">Payload & Files</th>
               <th className="p-3.5">Created At</th>
@@ -90,6 +91,12 @@ export const DeploymentHistoryPage: React.FC = () => {
                   </td>
                   <td className="p-3.5 text-ink-muted truncate max-w-[120px]">
                     {dep.id}
+                  </td>
+                  <td className="p-3.5 font-mono text-ink">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-paper border border-stone-subtle">
+                      <Globe className="w-3 h-3 text-vermilion" />
+                      {dep.region || site?.region || 'ap-south-1'}
+                    </span>
                   </td>
                   <td className="p-3.5">
                     <Badge status={dep.status} />

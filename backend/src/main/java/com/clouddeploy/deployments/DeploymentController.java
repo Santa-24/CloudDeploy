@@ -23,8 +23,9 @@ public class DeploymentController {
     public ResponseEntity<Deployment> deployArchive(
             @AuthenticationPrincipal User user,
             @PathVariable String siteId,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(deploymentService.deployArchive(user, siteId, file));
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "region", required = false) String region) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(deploymentService.deployArchive(user, siteId, file, region));
     }
 
     @GetMapping("/sites/{siteId}/deployments")

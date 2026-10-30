@@ -178,7 +178,7 @@ export const DashboardLayout: React.FC = () => {
       <div className="md:hidden border-b border-ink bg-paper-light px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-7 h-7 bg-vermilion border border-ink flex items-center justify-center text-paper font-bold shadow-[1px_1px_0px_0px_#1D1C19]">
-            <span className="text-xs font-mono">CD</span>
+            <span className="text-xs font-mono">SS</span>
           </div>
           <span className="font-editorial text-lg font-bold">CloudDeploy</span>
         </Link>

@@ -29,6 +29,10 @@ public class Deployment {
     @Column(length = 32, nullable = false)
     private DeploymentStatus status;
 
+    @Column(length = 32, nullable = false)
+    @Builder.Default
+    private String region = "ap-south-1";
+
     @Column(name = "s3_prefix", length = 512, nullable = false)
     private String s3Prefix;
 

@@ -6,7 +6,7 @@ import { Badge } from '../components/Badge';
 import { Skeleton } from '../components/Skeleton';
 import { Site } from '../types';
 import { siteService } from '../services/siteService';
-import { Plus, ExternalLink, Upload, FolderKanban, ArrowRight } from 'lucide-react';
+import { Plus, ExternalLink, Upload, FolderKanban, ArrowRight, Globe } from 'lucide-react';
 
 export const ProjectsListPage: React.FC = () => {
   const [sites, setSites] = useState<Site[]>([]);
@@ -57,7 +57,13 @@ export const ProjectsListPage: React.FC = () => {
             <div key={site.id} className="card-editorial p-6 bg-paper-light flex flex-col justify-between">
               <div>
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <Badge status={site.latestStatus || 'SUCCEEDED'} />
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge status={site.latestStatus || 'SUCCEEDED'} />
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-paper border border-ink text-ink inline-flex items-center gap-1">
+                      <Globe className="w-2.5 h-2.5 text-vermilion" />
+                      {site.region || 'ap-south-1'}
+                    </span>
+                  </div>
                   <span className="text-[11px] font-mono text-ink-faint">
                     {site.deploymentCount || 0} release(s)
                   </span>

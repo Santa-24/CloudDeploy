@@ -59,12 +59,17 @@ public class SiteService {
         }
 
         String siteId = "site-" + UUID.randomUUID().toString().substring(0, 8);
+        String region = (request.getRegion() != null && !request.getRegion().isBlank())
+                ? request.getRegion().trim().toLowerCase()
+                : "ap-south-1";
+
         Site site = Site.builder()
                 .id(siteId)
                 .ownerId(user.getId())
                 .name(request.getName())
                 .slug(request.getSlug())
                 .description(request.getDescription())
+                .region(region)
                 .build();
 
         Site saved = siteRepository.save(site);
@@ -102,6 +107,7 @@ public class SiteService {
                 .name(site.getName())
                 .slug(site.getSlug())
                 .description(site.getDescription())
+                .region(site.getRegion() != null ? site.getRegion() : "ap-south-1")
                 .currentDeploymentId(site.getCurrentDeploymentId())
                 .liveUrl(urlGenerationService.generateLiveUrl(site.getId()))
                 .latestStatus(latest != null ? latest.getStatus() : null)

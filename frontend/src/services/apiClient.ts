@@ -92,8 +92,12 @@ class ApiClient {
     }
   }
 
-  public async uploadArchive<T>(endpoint: string, file: File): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+  public async uploadArchive<T>(endpoint: string, file: File, queryParams?: Record<string, string>): Promise<T> {
+    let url = `${API_BASE_URL}${endpoint}`;
+    if (queryParams && Object.keys(queryParams).length > 0) {
+      const sp = new URLSearchParams(queryParams);
+      url += (url.includes('?') ? '&' : '?') + sp.toString();
+    }
     const formData = new FormData();
     formData.append('file', file);
 

@@ -32,6 +32,10 @@ public class Site {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(length = 32, nullable = false)
+    @Builder.Default
+    private String region = "ap-south-1";
+
     @Column(name = "current_deployment_id", length = 36)
     private String currentDeploymentId;
 

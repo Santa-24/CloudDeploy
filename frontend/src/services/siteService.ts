@@ -54,6 +54,7 @@ export const siteService = {
         name: payload.name,
         slug: payload.slug,
         description: payload.description || '',
+        region: payload.region || 'ap-south-1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         deploymentCount: 0,

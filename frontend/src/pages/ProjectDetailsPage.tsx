@@ -7,7 +7,7 @@ import { Button } from '../components/Button';
 import { Skeleton } from '../components/Skeleton';
 import { ZipDropzone } from '../features/ZipDropzone';
 import { RollbackModal } from '../features/RollbackModal';
-import { Site, Deployment } from '../types';
+import { Site, Deployment, AVAILABLE_REGIONS } from '../types';
 import { siteService } from '../services/siteService';
 import { deploymentService } from '../services/deploymentService';
 import { useToast } from '../components/Toast';
@@ -22,6 +22,7 @@ import {
   Layers,
   ArrowLeft,
   CheckCircle2,
+  Globe,
 } from 'lucide-react';
 
 export const ProjectDetailsPage: React.FC = () => {
@@ -71,6 +72,7 @@ export const ProjectDetailsPage: React.FC = () => {
         ...site,
         currentDeploymentId: newDep.id,
         liveUrl: newDep.liveUrl || site.liveUrl,
+        region: newDep.region || site.region,
         deploymentCount: (site.deploymentCount || 0) + 1,
         latestStatus: newDep.status,
       });
@@ -159,8 +161,14 @@ export const ProjectDetailsPage: React.FC = () => {
             {currentDep ? (
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="font-editorial text-2xl font-bold text-ink">
-                    Release v{currentDep.version} ({currentDep.id})
+                  <div className="font-editorial text-2xl font-bold text-ink flex items-center gap-2 flex-wrap">
+                    <span>Release v{currentDep.version} ({currentDep.id})</span>
+                    {(currentDep.region || site.region) && (
+                      <span className="font-mono text-xs font-bold px-2 py-0.5 bg-paper border border-ink text-ink inline-flex items-center gap-1">
+                        <Globe className="w-3 h-3 text-vermilion" />
+                        {currentDep.region || site.region}
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs font-mono text-ink-muted">
                     Published: {new Date(currentDep.startedAt).toLocaleString()}
@@ -191,8 +199,8 @@ export const ProjectDetailsPage: React.FC = () => {
                     <span className="text-ink font-bold">{(currentDep.totalBytes / 1024 / 1024).toFixed(1)} MB</span>
                   </div>
                   <div className="p-2 bg-paper border border-stone-subtle">
-                    <span className="block text-[10px] text-ink-faint">ORIGIN</span>
-                    <span className="text-ink font-bold">Amazon S3</span>
+                    <span className="block text-[10px] text-ink-faint">TARGET REGION</span>
+                    <span className="text-ink font-bold">{currentDep.region || site.region || 'ap-south-1'}</span>
                   </div>
                   <div className="p-2 bg-paper border border-stone-subtle">
                     <span className="block text-[10px] text-ink-faint">DISTRIBUTION</span>
@@ -208,7 +216,7 @@ export const ProjectDetailsPage: React.FC = () => {
           </div>
 
           {/* Upload & Deploy Widget */}
-          <ZipDropzone siteId={site.id} onDeploymentComplete={handleDeploymentComplete} />
+          <ZipDropzone siteId={site.id} initialRegion={site.region} onDeploymentComplete={handleDeploymentComplete} />
 
           {/* Quick Rollback Strip if multiple versions exist */}
           {successfulReleases.length > 1 && (
@@ -260,6 +268,16 @@ export const ProjectDetailsPage: React.FC = () => {
               Project Specification
             </h4>
             <div className="space-y-3 text-xs font-mono">
+              <div>
+                <span className="text-ink-faint block text-[10px]">AWS TARGET REGION</span>
+                <span className="text-ink flex items-center gap-1.5 font-bold">
+                  <Globe className="w-3.5 h-3.5 text-vermilion" />
+                  {site.region || 'ap-south-1'}
+                  <span className="text-[10px] text-ink-muted font-normal">
+                    ({AVAILABLE_REGIONS.find(r => r.id === (site.region || 'ap-south-1'))?.name || 'Asia Pacific'})
+                  </span>
+                </span>
+              </div>
               <div>
                 <span className="text-ink-faint block text-[10px]">INTERNAL IDENTIFIER</span>
                 <span className="text-ink break-all">{site.id}</span>

@@ -7,6 +7,7 @@ import { useToast } from '../components/Toast';
 import { UpgradePlanModal } from '../components/UpgradePlanModal';
 import { siteService } from '../services/siteService';
 import { useAuth } from '../hooks/useAuth';
+import { AVAILABLE_REGIONS, DEFAULT_REGION } from '../types';
 import {
   ArrowLeft,
   Check,
@@ -15,6 +16,7 @@ import {
   Zap,
   Sparkles,
   ShieldAlert,
+  Globe,
 } from 'lucide-react';
 
 export const CreateProjectPage: React.FC = () => {
@@ -26,6 +28,7 @@ export const CreateProjectPage: React.FC = () => {
   const [name, setName] = useState(templateName || '');
   const [slug, setSlug] = useState(searchParams.get('slug') || '');
   const [description, setDescription] = useState(searchParams.get('desc') || '');
+  const [region, setRegion] = useState<string>(DEFAULT_REGION);
   const [isLoading, setIsLoading] = useState(false);
   const [activeSiteCount, setActiveSiteCount] = useState<number>(0);
   const [isCheckingQuota, setIsCheckingQuota] = useState(true);
@@ -74,8 +77,9 @@ export const CreateProjectPage: React.FC = () => {
         name: name.trim(),
         slug: slug.trim(),
         description: description.trim(),
+        region: region,
       });
-      toast.success('Project Created', `Registered ${created.name}`);
+      toast.success('Project Created', `Registered ${created.name} in ${region}`);
       navigate(`/projects/${created.id}`);
     } catch (err: any) {
       if (err?.status === 400 || err?.message?.includes('maximum project limit') || err?.message?.includes('upgrade')) {
@@ -221,6 +225,52 @@ export const CreateProjectPage: React.FC = () => {
             />
             <div className="mt-2 p-2.5 bg-paper border border-stone-subtle text-xs font-mono text-ink-muted">
               Live Edge Routing: <span className="text-vermilion font-bold">https://sites.clouddeploy.internal/s/{slug || '<slug>'}/</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase tracking-wider text-ink-muted mb-1.5 font-medium flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-vermilion" />
+              <span>Target AWS Region</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {AVAILABLE_REGIONS.map((r) => {
+                const isSelected = region === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    disabled={isQuotaReached}
+                    onClick={() => setRegion(r.id)}
+                    className={`p-3 text-left border transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-ink bg-paper shadow-[3px_3px_0px_0px_#1D1C19]'
+                        : 'border-stone-subtle bg-paper-light hover:border-ink/60'
+                    } disabled:opacity-50`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{r.flag}</span>
+                        <span className="font-mono text-xs font-bold text-ink">{r.id}</span>
+                      </div>
+                      {isSelected && (
+                        <span className="w-4 h-4 rounded-full bg-ink text-paper-light flex items-center justify-center text-[10px]">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 font-editorial font-bold text-sm text-ink leading-tight">
+                      {r.name}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-ink-muted leading-tight font-sans">
+                      {r.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-1.5 text-[11px] font-mono text-ink-muted">
+              Origin S3 storage bucket and CloudFront edge routing will provision in the chosen AWS data center.
             </div>
           </div>
 

@@ -47,6 +47,11 @@ public class DeploymentService {
 
     @Transactional
     public Deployment deployArchive(User user, String siteId, MultipartFile file) {
+        return deployArchive(user, siteId, file, null);
+    }
+
+    @Transactional
+    public Deployment deployArchive(User user, String siteId, MultipartFile file, String deployRegion) {
         log.info("Initiating static deployment pipeline for site {} by user {}", siteId, user.getEmail());
 
         // Step 1 & 2: Ownership verification
@@ -58,6 +63,11 @@ public class DeploymentService {
             throw new QuotaExceededException("Deployment exceeds user storage quota of " +
                     (user.getStorageQuotaBytes() / (1024 * 1024)) + " MB.");
         }
+
+        // Determine effective region (user override -> site configured region -> default)
+        String effectiveRegion = (deployRegion != null && !deployRegion.isBlank())
+                ? deployRegion.trim().toLowerCase()
+                : (site.getRegion() != null ? site.getRegion() : "ap-south-1");
 
         // Determine next version number
         int nextVersion = deploymentRepository.findTopBySiteIdOrderByVersionDesc(siteId)
@@ -73,6 +83,7 @@ public class DeploymentService {
                 .siteId(siteId)
                 .version(nextVersion)
                 .status(DeploymentStatus.QUEUED)
+                .region(effectiveRegion)
                 .s3Prefix(s3Prefix)
                 .liveUrl(liveUrl)
                 .startedAt(Instant.now())
@@ -80,6 +91,7 @@ public class DeploymentService {
 
         deployment = deploymentRepository.save(deployment);
         recordEvent(deploymentId, "ARCHIVE_RECEIVED", "ZIP archive received (" + file.getSize() + " bytes). Enqueued for validation.");
+        recordEvent(deploymentId, "REGION_ROUTED", "Deployment routed to target AWS region: " + effectiveRegion + " with global CloudFront edge delivery.");
 
         Path tempDir = null;
         try {
@@ -108,8 +120,9 @@ public class DeploymentService {
             cloudFrontDeliveryService.invalidateSiteCache(site.getId());
             recordEvent(deploymentId, "CLOUDFRONT_INVALIDATED", "Wildcard cache invalidation submitted to edge CDN.");
 
-            // Step 11: Update Active Site Pointer
+            // Step 11: Update Active Site Pointer & Region
             site.setCurrentDeploymentId(deploymentId);
+            site.setRegion(effectiveRegion);
             siteRepository.save(site);
 
             // Step 12: Mark Success

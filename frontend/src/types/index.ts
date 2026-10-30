@@ -46,6 +46,7 @@ export interface Site {
   name: string;
   slug: string;
   description?: string;
+  region?: string;
   currentDeploymentId?: string;
   liveUrl?: string;
   createdAt: string;
@@ -61,6 +62,7 @@ export interface Deployment {
   siteName?: string;
   version: number;
   status: DeploymentStatus;
+  region?: string;
   s3Prefix: string;
   liveUrl?: string;
   fileCount: number;
@@ -103,10 +105,30 @@ export interface AdminOverview {
   failedList: Deployment[];
 }
 
+export interface AwsRegion {
+  id: string;
+  name: string;
+  flag: string;
+  description: string;
+}
+
+export const AVAILABLE_REGIONS: AwsRegion[] = [
+  { id: 'ap-south-1', name: 'Asia Pacific (Mumbai)', flag: '🇮🇳', description: 'Lowest latency for South Asia & India' },
+  { id: 'us-east-1', name: 'US East (N. Virginia)', flag: '🇺🇸', description: 'Standard primary US region with global CDN origin' },
+  { id: 'us-west-2', name: 'US West (Oregon)', flag: '🇺🇸', description: 'US Pacific & West Coast edge proximity' },
+  { id: 'eu-west-1', name: 'Europe (Ireland)', flag: '🇮🇪', description: 'European low-latency primary hub' },
+  { id: 'eu-central-1', name: 'Europe (Frankfurt)', flag: '🇩🇪', description: 'Central European data privacy & low latency' },
+  { id: 'ap-southeast-1', name: 'Asia Pacific (Singapore)', flag: '🇸🇬', description: 'Southeast Asia & Pacific hub' },
+  { id: 'ap-northeast-1', name: 'Asia Pacific (Tokyo)', flag: '🇯🇵', description: 'East Asia & Japan edge performance' },
+];
+
+export const DEFAULT_REGION = 'ap-south-1';
+
 export interface CreateSitePayload {
   name: string;
   slug: string;
   description?: string;
+  region?: string;
 }
 
 export interface AuthState {

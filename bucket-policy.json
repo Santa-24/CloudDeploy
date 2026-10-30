@@ -1,12 +1,19 @@
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::clouddeploy-sites-941905484053-ap-south-1/*"
-        }
-    ]
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Action":  "s3:GetObject",
+                          "Condition":  {
+                                            "StringEquals":  {
+                                                                 "AWS:SourceArn":  "arn:aws:cloudfront::941905484053:distribution/E2VP7RB0IJ10UB"
+                                                             }
+                                        },
+                          "Principal":  {
+                                            "Service":  "cloudfront.amazonaws.com"
+                                        },
+                          "Resource":  "arn:aws:s3:::clouddeploy-sites-941905484053-ap-south-1/*",
+                          "Effect":  "Allow",
+                          "Sid":  "AllowCloudFrontServicePrincipalReadOnly"
+                      }
+                  ]
 }

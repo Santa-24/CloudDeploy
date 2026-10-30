@@ -1,19 +1,21 @@
-import React, { useState, useRef } from 'react';
-import { UploadCloud, CheckCircle, AlertTriangle, FileArchive, ArrowRight, Copy, Check, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { UploadCloud, CheckCircle, AlertTriangle, FileArchive, ArrowRight, Copy, Check, RefreshCw, Globe } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
-import { Deployment, DeploymentStatus } from '../types';
+import { Deployment, DeploymentStatus, AVAILABLE_REGIONS, DEFAULT_REGION } from '../types';
 import { deploymentService } from '../services/deploymentService';
 import { useToast } from '../components/Toast';
 
 interface ZipDropzoneProps {
   siteId: string;
+  initialRegion?: string;
   onDeploymentComplete?: (deployment: Deployment) => void;
 }
 
-export const ZipDropzone: React.FC<ZipDropzoneProps> = ({ siteId, onDeploymentComplete }) => {
+export const ZipDropzone: React.FC<ZipDropzoneProps> = ({ siteId, initialRegion, onDeploymentComplete }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [targetRegion, setTargetRegion] = useState<string>(initialRegion || DEFAULT_REGION);
   const [status, setStatus] = useState<DeploymentStatus | 'IDLE'>('IDLE');
   const [progressText, setProgressText] = useState<string>('');
   const [deploymentResult, setDeploymentResult] = useState<Deployment | null>(null);
@@ -21,6 +23,12 @@ export const ZipDropzone: React.FC<ZipDropzoneProps> = ({ siteId, onDeploymentCo
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
+
+  useEffect(() => {
+    if (initialRegion) {
+      setTargetRegion(initialRegion);
+    }
+  }, [initialRegion]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -79,12 +87,12 @@ export const ZipDropzone: React.FC<ZipDropzoneProps> = ({ siteId, onDeploymentCo
       await new Promise(r => setTimeout(r, 800));
 
       setStatus('PUBLISHING');
-      setProgressText('Extracting assets to S3 prefix and syncing with CloudFront distribution...');
+      setProgressText(`Extracting assets to S3 prefix and deploying to AWS ${targetRegion}...`);
 
-      const result = await deploymentService.deployArchive(siteId, selectedFile);
+      const result = await deploymentService.deployArchive(siteId, selectedFile, targetRegion);
 
       setStatus('SUCCEEDED');
-      setProgressText('Static website published successfully to CloudFront edge network.');
+      setProgressText(`Static website published successfully to AWS ${targetRegion} and CloudFront CDN.`);
       setDeploymentResult(result);
       toast.success('Deployment Live', `Version ${result.version} has been published.`);
 
@@ -186,6 +194,30 @@ export const ZipDropzone: React.FC<ZipDropzoneProps> = ({ siteId, onDeploymentCo
             </div>
           )}
 
+          {/* AWS Target Region Selector */}
+          <div className="mt-4 p-3 bg-paper border border-ink flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-vermilion shrink-0" />
+              <div>
+                <div className="text-xs font-mono font-bold text-ink">Target AWS Region</div>
+                <div className="text-[11px] text-ink-muted">Routing & storage origin location for this release</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={targetRegion}
+                onChange={(e) => setTargetRegion(e.target.value)}
+                className="bg-paper-light text-ink border border-ink font-mono text-xs px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-ink"
+              >
+                {AVAILABLE_REGIONS.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.flag} {r.id} — {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-xs font-mono text-ink-faint">
               STRICT SECURITY: ZIP SLIP PROTECTION • DECOMPRESSION BOMB LIMITS (250MB / 1000 FILES)
@@ -238,8 +270,17 @@ export const ZipDropzone: React.FC<ZipDropzoneProps> = ({ siteId, onDeploymentCo
               <h4 className="font-editorial text-xl font-bold text-green-900 mb-1">
                 Deployment Live
               </h4>
-              <p className="text-xs font-mono text-ink-muted mb-4">
-                Version {deploymentResult.version} • {deploymentResult.fileCount || 14} files published • CloudFront Invalidation Submitted
+              <p className="text-xs font-mono text-ink-muted mb-4 flex flex-wrap items-center gap-2">
+                <span>Version {deploymentResult.version}</span>
+                <span>•</span>
+                <span>{deploymentResult.fileCount || 14} files published</span>
+                <span>•</span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-paper border border-ink text-ink font-bold">
+                  <Globe className="w-3 h-3 text-vermilion" />
+                  {deploymentResult.region || targetRegion}
+                </span>
+                <span>•</span>
+                <span>CloudFront Invalidation Submitted</span>
               </p>
 
               {deploymentResult.liveUrl && (

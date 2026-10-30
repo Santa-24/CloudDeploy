@@ -62,6 +62,7 @@ public class RollbackService {
                 .siteId(siteId)
                 .version(nextVersion)
                 .status(DeploymentStatus.SUCCEEDED)
+                .region(target.getRegion() != null ? target.getRegion() : "ap-south-1")
                 .s3Prefix(target.getS3Prefix()) // Re-points to immutable target release prefix
                 .liveUrl(liveUrl)
                 .fileCount(target.getFileCount())
@@ -72,8 +73,11 @@ public class RollbackService {
 
         rollbackRecord = deploymentRepository.save(rollbackRecord);
 
-        // 4. Update current deployment reference in RDS
+        // 4. Update current deployment reference and region in RDS
         site.setCurrentDeploymentId(rollbackDeploymentId);
+        if (target.getRegion() != null) {
+            site.setRegion(target.getRegion());
+        }
         siteRepository.save(site);
 
         // 5. Apply CloudFront cache invalidation
