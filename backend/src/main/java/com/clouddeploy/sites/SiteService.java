@@ -54,7 +54,27 @@ public class SiteService {
                     " websites on the " + tierName + " tier. Please upgrade your plan to deploy more projects.");
         }
 
-        if (siteRepository.findBySlugAndDeletedAtIsNull(request.getSlug()).isPresent()) {
+        String baseSlug = (request.getSlug() != null && !request.getSlug().isBlank())
+                ? request.getSlug().trim().toLowerCase()
+                : request.getName().toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)+", "");
+        if (baseSlug.isBlank()) {
+            baseSlug = "project-" + UUID.randomUUID().toString().substring(0, 6);
+        }
+
+        String finalSlug = baseSlug;
+        int suffix = 1;
+        while (siteRepository.existsBySlug(finalSlug)) {
+            Optional<Site> existing = siteRepository.findBySlug(finalSlug);
+            if (existing.isPresent() && existing.get().getDeletedAt() != null) {
+                Site old = existing.get();
+                old.setSlug(old.getSlug() + "-del-" + UUID.randomUUID().toString().substring(0, 4));
+                siteRepository.saveAndFlush(old);
+                break;
+            }
+            suffix++;
+            finalSlug = baseSlug + "-" + suffix;
+        }
+        if (false) {
             throw new IllegalArgumentException("The URL slug '" + request.getSlug() + "' is already in use.");
         }
 
@@ -67,7 +87,7 @@ public class SiteService {
                 .id(siteId)
                 .ownerId(user.getId())
                 .name(request.getName())
-                .slug(request.getSlug())
+                .slug(finalSlug)
                 .description(request.getDescription())
                 .region(region)
                 .build();
@@ -82,6 +102,7 @@ public class SiteService {
     public void deleteSite(User user, String siteId) {
         Site site = verifyOwnership(user, siteId);
         site.setDeletedAt(Instant.now());
+        site.setSlug(site.getSlug() + "-del-" + UUID.randomUUID().toString().substring(0, 8));
         siteRepository.save(site);
         auditService.record(user.getEmail(), "SITE_DELETE", site.getId(), "Site deleted: " + site.getName());
     }

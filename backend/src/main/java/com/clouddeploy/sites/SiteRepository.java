@@ -12,6 +12,8 @@ public interface SiteRepository extends JpaRepository<Site, String> {
     Optional<Site> findByIdAndDeletedAtIsNull(String id);
     Optional<Site> findByIdAndOwnerIdAndDeletedAtIsNull(String id, String ownerId);
     Optional<Site> findBySlugAndDeletedAtIsNull(String slug);
+    Optional<Site> findBySlug(String slug);
+    boolean existsBySlug(String slug);
     long countByOwnerIdAndDeletedAtIsNull(String ownerId);
     long countByDeletedAtIsNull();
 }
