@@ -28,6 +28,12 @@ server {
 
     client_max_body_size 60M;
 
+    # Never cache index.html
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate";
+        expires -1;
+    }
+
     location /api/ {
         proxy_pass http://127.0.0.1:8080/api/;
         proxy_http_version 1.1;
@@ -76,3 +82,4 @@ curl -s -I "http://localhost/assets/$JS_FILE" | head -n 1
 echo "=========================================="
 echo " [OK] ShipSafe is now live on http://65.0.131.231"
 echo "=========================================="
+
