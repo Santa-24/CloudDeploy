@@ -17,7 +17,7 @@ REPO_URL="https://github.com/Santa-24/CloudDeploy.git"
 echo "==> [1/7] Installing system dependencies (Java 21, Nginx, Git, build tools)..."
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
-sudo apt-get install -y openjdk-21-jdk nginx git curl unzip psmisc
+sudo apt-get install -y openjdk-21-jdk nginx git curl unzip psmisc || sudo apt-get install -y default-jdk nginx git curl unzip psmisc
 
 # 2. Configure 2GB Swap Memory (prevents out-of-memory during Maven compile on small instances)
 echo "==> [2/7] Checking and configuring swap memory..."
@@ -182,3 +182,4 @@ else
     echo "     sudo journalctl -u shipsafe-backend -n 30"
     echo "=========================================================="
 fi
+
