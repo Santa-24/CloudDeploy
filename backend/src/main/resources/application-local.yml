@@ -18,6 +18,6 @@ spring:
     baseline-on-migrate: true
 
 app:
-  storage-mode: ${APP_STORAGE_MODE:s3}
+  storage-mode: ${APP_STORAGE_MODE:local}
   local-storage-path: ./storage
-  demo-auth-enabled: ${APP_DEMO_AUTH_ENABLED:false}
+  demo-auth-enabled: ${APP_DEMO_AUTH_ENABLED:true}
