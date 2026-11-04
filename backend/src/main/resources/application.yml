@@ -52,8 +52,8 @@ aws:
     upload-bucket: ${AWS_S3_UPLOAD_BUCKET:clouddeploy-uploads-staging}
     site-bucket: ${AWS_S3_SITE_BUCKET:clouddeploy-sites-published}
   cloudfront:
-    distribution-id: ${AWS_CLOUDFRONT_DISTRIBUTION_ID:E1EXAMPLECLOUDFRONT}
-    domain: ${AWS_CLOUDFRONT_DOMAIN:d111111abcdef8.cloudfront.net}
+    distribution-id: ${AWS_CLOUDFRONT_DISTRIBUTION_ID:}
+    domain: ${AWS_CLOUDFRONT_DOMAIN:}
   cognito:
     user-pool-id: ${AWS_COGNITO_USER_POOL_ID:ap-south-1_examplePoolId}
     client-id: ${AWS_COGNITO_CLIENT_ID:exampleClientId123}

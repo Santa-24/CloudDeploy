@@ -93,7 +93,14 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Static Assets
+    # Deployed Tenant Websites
+    location /sites/ {
+        root /home/ubuntu/CloudDeploy/backend/storage;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    # Static Assets (ShipSafe UI)
     location /assets/ {
         try_files $uri =404;
         access_log off;
@@ -119,10 +126,13 @@ cd "$APP_DIR/backend"
 chmod +x mvnw
 ./mvnw clean package -DskipTests
 
-# Create local storage directories
+# Create local storage directories and configure permissions for Nginx access
 mkdir -p "$APP_DIR/backend/storage/h2db"
 mkdir -p "$APP_DIR/backend/storage/uploads"
-chmod -R 775 "$APP_DIR/backend/storage"
+mkdir -p "$APP_DIR/backend/storage/sites"
+sudo chmod 755 /home/ubuntu
+sudo chmod -R 775 "$APP_DIR/backend/storage"
+sudo usermod -aG ubuntu www-data 2>/dev/null || true
 
 echo "==> Configuring systemd service: shipsafe-backend..."
 cat << EOF | sudo tee /etc/systemd/system/shipsafe-backend.service > /dev/null

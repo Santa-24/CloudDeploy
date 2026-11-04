@@ -15,14 +15,13 @@ public class UrlGenerationService {
     private String cloudFrontDomain;
 
     public String generateLiveUrl(String siteId) {
-        if (cloudFrontDomain != null && !cloudFrontDomain.isBlank() && !cloudFrontDomain.contains("example")) {
+        if (cloudFrontDomain != null && !cloudFrontDomain.isBlank() 
+                && !cloudFrontDomain.contains("example") 
+                && !cloudFrontDomain.contains("d11111")
+                && !cloudFrontDomain.contains("placeholder")) {
             return String.format("https://%s/sites/%s/index.html", cloudFrontDomain.trim(), siteId);
         }
-        String baseDomain = storageProperties.getBaseDomain();
-        if (baseDomain.startsWith("http://") || baseDomain.startsWith("https://")) {
-            return String.format("%s/sites/%s/index.html", baseDomain, siteId);
-        }
-        return String.format("https://%s/sites/%s/index.html", baseDomain, siteId);
+        return String.format("/sites/%s/index.html", siteId);
     }
 }
 

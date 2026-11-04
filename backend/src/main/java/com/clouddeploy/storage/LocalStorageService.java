@@ -41,15 +41,21 @@ public class LocalStorageService implements StorageService {
     public void publishDeploymentFiles(String siteId, String deploymentId, Path localExtractedDir, List<String> relativePaths) {
         try {
             Path targetBase = getBasePath().resolve(String.format("sites/%s/deployments/%s", siteId, deploymentId));
+            Path activeRoot = getBasePath().resolve(String.format("sites/%s", siteId));
             Files.createDirectories(targetBase);
+            Files.createDirectories(activeRoot);
 
             for (String relativePath : relativePaths) {
                 Path source = localExtractedDir.resolve(relativePath);
                 Path dest = targetBase.resolve(relativePath);
                 Files.createDirectories(dest.getParent());
                 Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING);
+
+                Path activeDest = activeRoot.resolve(relativePath);
+                Files.createDirectories(activeDest.getParent());
+                Files.copy(source, activeDest, StandardCopyOption.REPLACE_EXISTING);
             }
-            log.info("[LOCAL STORAGE] Published {} assets for site {} version {}", relativePaths.size(), siteId, deploymentId);
+            log.info("[LOCAL STORAGE] Published {} assets for site {} version {} (and active root)", relativePaths.size(), siteId, deploymentId);
         } catch (IOException e) {
             throw new RuntimeException("Failed to publish static deployment files locally", e);
         }

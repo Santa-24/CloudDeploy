@@ -52,6 +52,13 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # Deployed Tenant Websites
+    location /sites/ {
+        root /home/ubuntu/CloudDeploy/backend/storage;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
     location /assets/ {
         try_files $uri =404;
         access_log off;
@@ -66,6 +73,10 @@ EOF
 
 sudo rm -rf /etc/nginx/sites-enabled/default: 2>/dev/null || true
 sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+sudo chmod 755 /home/ubuntu 2>/dev/null || true
+sudo chmod -R 775 "$SCRIPT_DIR/backend/storage" 2>/dev/null || true
+sudo usermod -aG ubuntu www-data 2>/dev/null || true
 
 echo "==> [3/4] Restarting Nginx..."
 sudo nginx -t
