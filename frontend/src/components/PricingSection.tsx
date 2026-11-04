@@ -262,7 +262,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ showTitle = true
               </tr>
               <tr>
                 <td className="p-4 font-bold">Custom Domains & SSL</td>
-                <td className="p-4 text-center text-stone">CloudDeploy Subdomain</td>
+                <td className="p-4 text-center text-stone">ShipSafe Subdomain</td>
                 <td className="p-4 text-center bg-vermilion/5 text-green-700">✓ Custom + Auto SSL</td>
                 <td className="p-4 text-center text-green-700">✓ Wildcard SSL</td>
               </tr>

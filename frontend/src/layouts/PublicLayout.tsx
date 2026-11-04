@@ -44,11 +44,11 @@ export const PublicLayout: React.FC = () => {
             {/* Brand Logo */}
             <Link to="/" className="flex items-center gap-2.5 group">
               <div className="w-8 h-8 bg-paper border border-ink flex items-center justify-center p-0.5 shadow-[2px_2px_0px_0px_#1D1C19] group-hover:translate-x-[-1px] group-hover:translate-y-[-1px] transition-transform">
-                <img src="/logo.png" alt="CloudDeploy" className="w-full h-full object-contain" />
+                <img src="/logo.png" alt="ShipSafe" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-editorial text-xl font-bold tracking-tight text-ink leading-none">
-                  CloudDeploy
+                  ShipSafe
                 </span>
                 <span className="text-[10px] font-mono tracking-widest text-ink-faint uppercase leading-tight mt-0.5">
                   AWS Static Platform
@@ -190,9 +190,9 @@ export const PublicLayout: React.FC = () => {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-6 h-6 bg-paper border border-ink flex items-center justify-center p-0.5">
-                <img src="/logo.png" alt="CloudDeploy" className="w-full h-full object-contain" />
+                <img src="/logo.png" alt="ShipSafe" className="w-full h-full object-contain" />
               </div>
-              <span className="font-editorial text-lg font-bold">CloudDeploy</span>
+              <span className="font-editorial text-lg font-bold">ShipSafe</span>
             </div>
             <p className="text-xs text-ink-muted max-w-sm mb-4 leading-relaxed">
               Enterprise-grade AWS-native static website deployment engine. Upload archives, safely validate contents, publish to private S3, and distribute globally via CloudFront.
@@ -241,7 +241,7 @@ export const PublicLayout: React.FC = () => {
         </div>
 
         <div className="max-w-7xl mx-auto border-t border-stone-subtle mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-ink-faint font-mono">
-          <div>© 2026 CloudDeploy Inc. Built for AWS Native Velocity.</div>
+          <div>© 2026 ShipSafe Inc. Built for AWS Native Velocity.</div>
           <div className="mt-2 sm:mt-0">Warm Editorial Design System // Free Tier Enabled</div>
         </div>
       </footer>

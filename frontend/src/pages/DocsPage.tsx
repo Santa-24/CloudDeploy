@@ -21,7 +21,7 @@ export const DocsPage: React.FC = () => {
           </h2>
           <Card variant="flat" className="bg-paper-light">
             <p className="text-sm text-ink-muted mb-4">
-              CloudDeploy validates every uploaded ZIP file in a strictly sandboxed, streamed Java 21 pipeline. To pass automated verification, your archive must conform to the following directory layout:
+              ShipSafe validates every uploaded ZIP file in a strictly sandboxed, streamed Java 21 pipeline. To pass automated verification, your archive must conform to the following directory layout:
             </p>
             <div className="bg-ink text-paper p-4 font-mono text-xs border border-ink space-y-1">
               <div className="text-lime">my-website.zip</div>
@@ -110,7 +110,7 @@ export const DocsPage: React.FC = () => {
           </h2>
           <Card variant="editorial" className="bg-paper-light">
             <p className="text-sm text-ink-muted mb-3">
-              Published websites are exposed via path-based routing under the configured CloudDeploy domain:
+              Published websites are exposed via path-based routing under the configured ShipSafe domain:
             </p>
             <div className="bg-paper p-3 border border-ink font-mono text-xs text-ink mb-4">
               https://sites.clouddeploy.internal/s/&#123;siteId&#125;/

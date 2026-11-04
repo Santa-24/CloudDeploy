@@ -8,7 +8,7 @@ class ApiClient {
   private demoMode: boolean = DEFAULT_DEMO_MODE;
 
   constructor() {
-    this.token = localStorage.getItem('clouddeploy_token');
+    this.token = localStorage.getItem('shipsafe_token') || localStorage.getItem('clouddeploy_token');
     const storedDemo = localStorage.getItem('clouddeploy_demo_mode');
     if (!DEFAULT_DEMO_MODE) {
       this.demoMode = false;
@@ -21,6 +21,7 @@ class ApiClient {
   public setToken(token: string | null) {
     this.token = token;
     if (token) {
+      localStorage.setItem('shipsafe_token', token);
       localStorage.setItem('clouddeploy_token', token);
     } else {
       localStorage.removeItem('clouddeploy_token');
@@ -85,7 +86,7 @@ class ApiClient {
       throw {
         status: 0,
         error: 'NetworkError',
-        message: error?.message || 'Could not connect to CloudDeploy API backend. Please check network or verify backend service is running on port 8080.',
+        message: error?.message || 'Could not connect to ShipSafe API backend. Please check network or verify backend service is running on port 8080.',
         timestamp: new Date().toISOString(),
         path: endpoint,
       } as ApiErrorResponse;

@@ -43,7 +43,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boole
   if (isLoading) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center font-mono text-xs text-ink animate-pulse">
-        Initializing CloudDeploy Security Context...
+        Initializing ShipSafe Security Context...
       </div>
     );
   }

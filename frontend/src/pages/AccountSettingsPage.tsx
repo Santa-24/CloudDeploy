@@ -33,7 +33,7 @@ export const AccountSettingsPage: React.FC = () => {
             <div>
               <h4 className="font-editorial text-lg font-bold text-ink">SameSite & Session Protections</h4>
               <p className="text-xs text-ink-muted mt-1 mb-3">
-                CloudDeploy enforces CSRF protection, bearer token validation, and least-privilege AWS IAM identity boundaries on every API transaction.
+                ShipSafe enforces CSRF protection, bearer token validation, and least-privilege AWS IAM identity boundaries on every API transaction.
               </p>
               <div className="text-xs font-mono text-ink-faint">Token Mode: Bearer JWT / Cognito Verified</div>
             </div>

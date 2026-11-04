@@ -41,7 +41,7 @@ export const FeaturesPage: React.FC = () => {
             Engineered for <span className="italic text-vermilion font-normal">Pure AWS Velocity</span>
           </h1>
           <p className="text-base sm:text-lg text-ink-muted leading-relaxed">
-            CloudDeploy eliminates slow Docker builds and fragile container orchestrations for static sites. We validate your build archives, stream them to private Amazon S3, and deliver them globally through Amazon CloudFront in under 2 seconds.
+            ShipSafe eliminates slow Docker builds and fragile container orchestrations for static sites. We validate your build archives, stream them to private Amazon S3, and deliver them globally through Amazon CloudFront in under 2 seconds.
           </p>
         </div>
 
@@ -181,7 +181,7 @@ export const FeaturesPage: React.FC = () => {
                   Sandboxed Ingestion with Zero Server Execution
                 </h3>
                 <p className="text-sm text-ink-muted leading-relaxed">
-                  Static hosting must remain strictly static. CloudDeploy prevents attackers from leveraging file uploads for remote code execution or server compromise.
+                  Static hosting must remain strictly static. ShipSafe prevents attackers from leveraging file uploads for remote code execution or server compromise.
                 </p>
                 <div className="space-y-2.5 font-mono text-xs">
                   <div className="p-3 bg-paper border border-ink/20 flex items-start gap-2.5">
@@ -239,7 +239,7 @@ if (isBlacklistedExtension(destFile)) {
                   Dual-Bucket S3 Architecture
                 </h3>
                 <p className="text-sm text-ink-muted leading-relaxed">
-                  CloudDeploy separates raw uploaded artifacts from live published websites into two dedicated Amazon S3 buckets.
+                  ShipSafe separates raw uploaded artifacts from live published websites into two dedicated Amazon S3 buckets.
                 </p>
                 <div className="space-y-3 font-mono text-xs">
                   <div className="p-4 bg-paper border border-ink/20">
@@ -282,7 +282,7 @@ if (isBlacklistedExtension(destFile)) {
                   Global CloudFront Origin Access Control (OAC)
                 </h3>
                 <p className="text-sm text-ink-muted leading-relaxed">
-                  Traditional S3 websites require public bucket policies, exposing raw storage to internet crawlers and DDoS risks. CloudDeploy uses AWS OAC:
+                  Traditional S3 websites require public bucket policies, exposing raw storage to internet crawlers and DDoS risks. ShipSafe uses AWS OAC:
                 </p>
                 <ul className="space-y-2 text-xs text-ink-muted">
                   <li className="flex items-center gap-2">

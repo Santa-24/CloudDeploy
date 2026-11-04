@@ -33,11 +33,11 @@ export const LoginPage: React.FC = () => {
       <div className="max-w-md w-full">
         {/* Card Header with Brand Logo */}
         <div className="text-center mb-8 space-y-3">
-          <Link to="/" className="inline-block group focus:outline-none" title="Return to CloudDeploy Home">
+          <Link to="/" className="inline-block group focus:outline-none" title="Return to ShipSafe Home">
             <div className="relative mx-auto w-20 h-20 bg-paper-light border-2 border-ink shadow-[4px_4px_0px_0px_#C65336] p-1.5 transition-transform group-hover:-translate-y-0.5 group-hover:-translate-x-0.5">
               <img
                 src="/logo.png"
-                alt="CloudDeploy Logo"
+                alt="ShipSafe Logo"
                 className="w-full h-full object-contain"
               />
               <div className="absolute -bottom-2 -right-2 px-1.5 py-0.5 bg-ink text-lime border border-ink flex items-center justify-center font-mono text-[9px] font-bold shadow-[1px_1px_0px_0px_#1D1C19]">
@@ -49,7 +49,7 @@ export const LoginPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-center gap-2">
               <span className="font-editorial text-2xl font-bold tracking-tight text-ink">
-                CloudDeploy
+                ShipSafe
               </span>
               <span className="text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 bg-ink text-lime border border-ink font-bold">
                 CONSOLE

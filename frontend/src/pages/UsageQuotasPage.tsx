@@ -94,7 +94,7 @@ export const UsageQuotasPage: React.FC = () => {
             Storage Retention & Pruning
           </h4>
           <p className="text-xs text-ink-muted leading-relaxed mb-4">
-            CloudDeploy retains deployment history for rapid rollback operations. Incomplete uploads and temporary staging files are automatically cleaned up to prevent quota bloat.
+            ShipSafe retains deployment history for rapid rollback operations. Incomplete uploads and temporary staging files are automatically cleaned up to prevent quota bloat.
           </p>
           <div className="p-3 bg-paper border border-stone-subtle text-xs font-mono text-ink-faint">
             Lifecycle Policy: Upload staging buckets automatically purge unreferenced archives after 7 days.
